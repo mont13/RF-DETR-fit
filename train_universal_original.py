@@ -69,6 +69,12 @@ def validate_dataset(dataset_dir):
             found_splits.append(split)
             print(f"✅ {split}: {n_images} obrázků, {n_annotations} anotací, {n_categories} kategorií")
             
+            # Zobraz kategorie a jejich statistiky
+            print(f"📋 Kategorie v {split}:")
+            for cat in data['categories']:
+                count = sum(1 for ann in data['annotations'] if ann['category_id'] == cat['id'])
+                print(f"  ID {cat['id']}: {cat['name']} - {count} objektů")
+            
             # Zkontroluj iscrowd problém
             crowd_count = sum(1 for ann in data['annotations'] if ann.get('iscrowd', 0) == 1)
             if crowd_count > 0:
@@ -140,7 +146,7 @@ Tip: Pro první spuštění použij jen:
     parser.add_argument('--output', '-o', default='trained_model', help='Výstupní složka pro model (default: trained_model)')
     
     # Training parametry
-    parser.add_argument('--epochs', '-e', type=int, default=50, help='Počet epoch (default: 50)')
+    parser.add_argument('--epochs', '-e', type=int, default=20, help='Počet epoch (default: 20)')
     parser.add_argument('--batch-size', '-b', type=int, default=None, help='Batch size (default: auto)')
     parser.add_argument('--lr', type=float, default=1e-5, help='Learning rate (default: 1e-5)')
     parser.add_argument('--lr-encoder', type=float, default=1e-6, help='Encoder LR (default: 1e-6)')
@@ -152,9 +158,14 @@ Tip: Pro první spuštění použij jen:
     
     # Advanced
     parser.add_argument('--no-early-stopping', action='store_true', help='Vypni early stopping')
-    parser.add_argument('--patience', type=int, default=10, help='Early stopping patience (default: 10)')
-    parser.add_argument('--warmup-epochs', type=int, default=5, help='Warmup epochs (default: 5)')
+    parser.add_argument('--patience', type=int, default=5, help='Early stopping patience (default: 5)')
+    parser.add_argument('--warmup-epochs', type=int, default=2, help='Warmup epochs (default: 2)')
     parser.add_argument('--grad-accum', type=int, default=1, help='Gradient accumulation steps (default: 1)')
+    
+    # Data augmentation pro malý dataset
+    parser.add_argument('--augment', action='store_true', help='Zapni silnější augmentaci pro malý dataset')
+    parser.add_argument('--mixup', type=float, default=0.0, help='Mixup alpha (0.2 doporučeno pro malé datasety)')
+    parser.add_argument('--dropout', type=float, default=0.1, help='Dropout rate (default: 0.1)')
     
     # Debug
     parser.add_argument('--quick-test', action='store_true', help='Rychlý test - jen 1 epocha')
@@ -233,10 +244,14 @@ Tip: Pro první spuštění použij jen:
         'early_stopping_patience': args.patience,
         'early_stopping_min_delta': 0.001,
         'warmup_epochs': args.warmup_epochs,
-        'lr_drop': max(20, epochs // 2),  # LR drop v polovině
+        'lr_drop': max(10, epochs // 3),  # LR drop dříve pro malý dataset
         'clip_max_norm': 0.1,
         'use_ema': True,
         'ema_decay': 0.995,
+        # Augmentace pro malý dataset
+        'use_augment': args.augment,
+        'mixup_alpha': args.mixup,
+        'dropout_rate': args.dropout,
     }
     
     print(f"\n📋 Training konfigurace:")
