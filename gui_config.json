@@ -1,0 +1,6 @@
+{
+  "last_model_path": "hardhat_workers_model/checkpoint_best_total.pth",
+  "last_image_dir": "/home/miro/Documents/cvat-projekty/screw/hardhat-prepared/test",
+  "confidence": 0.5,
+  "last_image_path": "/home/miro/Documents/cvat-projekty/screw/hardhat-prepared/test/000052_jpg.rf.8eb96b5807b715186f43472d52a03594.jpg"
+}
